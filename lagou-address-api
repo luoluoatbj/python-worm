@@ -1,0 +1,76 @@
+#coding:utf-8
+import requests
+import json
+import csv
+##address文件和脚本放到同一目录 不然读取不到
+
+
+def get_geocode(address):
+    url = 'http://api.map.baidu.com/geocoder/v2/?output=json&ak=TvZms2fFR9Z4rat2m2Ov49xd864MtQ4i&address=%s'
+    headers={
+    'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Encoding':'gzip, deflate, sdch',
+    'Accept-Language':'zh-CN,zh;q=0.8',
+    'Cache-Control':'max-age=0',
+    'Connection':'keep-alive',
+    'Cookie':'BIDUPSID=11416F367B39D64AAC649F704E10D711; PSTM=1492239928; BAIDUID=B7F93CD62BDD37CE71BDC4B32A5EFD8B:FG=1; __cfduid=d6a4b74445582f4ac556ef9c250145c4a1492239973; BDUSS=nVXTEF6WVlkcTNPdTFYMWdxa1hYd2w0aldnNDcyZFRDYjFQMWxmN0FXMzZYQmxaSVFBQUFBJCQAAAAAAAAAAAEAAABhcR0vc2hpbmW72rreAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPrP8Vj6z~FYR; cflag=15%3A3; BDRCVFR[PaHiFN6tims]=9xWipS8B-FspA7EnHc1QhPEUf; PSINO=6; H_PS_PSSID=; BDORZ=B490B5EBF6F3CD402E515D22BCDA1598',
+    'Host':'api.map.baidu.com',
+    'Upgrade-Insecure-Requests':'1',
+    'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+    }
+    url_address=url %address
+    print url_address
+    #res = requests.get(url_address).text 原来代码不加headers 404 错误 因此加上headers观察
+    res = requests.get(url_address,headers=headers).text
+    #打印调试为了看是否请求url返回到了需求的数据
+    #print res
+    json_data = json.loads(res)
+    #调试是否正确解析了网页源码
+    #print json_data
+    #下面的[][]中括号内的值是字典的key 层级层级解析 json_data['result']首先是个字典 它下面的key  location对应的值赋值给变量geo
+    geo = json_data['result']['location']
+    #geo又有两个key  分别是lat 和lng  因此定义这两个变量接收
+    lat=geo['lat']
+    lng=geo['lng']
+    #下面代码为什么定义一个空列表 是因为要存入csv，调用writerow(列表)方法
+    little_list=[]
+    #空列表添加第一个元素地址
+    little_list.append(address)
+    #little_list添加第二个元素lat
+    little_list.append(lat)
+    #little_list添加第三个元素lng
+    little_list.append(lng)
+    #此时little_list值是这样  ['广州天河区','23.13'	'113.41']
+    #这样一个地址对应一条记录 这个函数我们传入一个address参数 这个address是读取 address.csv文件获得的
+    #那脚本的逻辑 就变成了这样 首先读取地址文件 for 循环 将每一个地址取出 回调本函数
+    #关于return 和 print  因为你下面代码要回调这个函数 赋值给一个变量 如果print 就没有返回值 因此调试这个函数是否正确时候用print测试 跑程序用return
+    # 用return 返回现在的little_list ['广州天河区','23.13'	'113.41']
+    #
+    return little_list
+
+if __name__ == '__main__':
+    all_data=[]
+    csvfile = file('address.csv', 'rb')
+    reader = csv.reader(csvfile)
+    #读取地址文件 循环将
+    for line in reader:
+       # line 是一个列表 地址是它的第一个元素 取line[0] 并将这个值赋值给address 变量 回调get_geocode函数
+        address=line[0]
+       #get_geocode(address) 函数return了 little_list这个变量 这个变量内容就是['广州天河区','23.13','113.41']
+        little_list=get_geocode(address)
+       #for循环之外的大列表 存入这个小列表 每个地址遍历完之后大列表会存储所有地址的小列表
+        all_data.append(little_list)
+    csvfile.close()
+    #打开并写入每个地址的数据 little_list=['广州天河区','23.13'	'113.41']
+    lagou = file('lagou.csv', 'wb')
+    writer = csv.writer(lagou)
+    #all_data此时添加了所有地址的经纬度数据 类似下面这样 大列表存小列表
+    #all_data=[
+       # ['广州天河区','23.13'	'113.40'],
+        #['广州市天河区珠江新城', '23.16', '113.34']
+   # ]
+
+    ## 对all_datafor循环遍历 循环内部 writer.writerow(little_list)写入
+    for little_list in all_data:
+         writer.writerow(little_list)
+    lagou.close()
