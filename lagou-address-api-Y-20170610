@@ -27,4 +27,4 @@ if __name__ == '__main__':
             for line in reader:
                 address = line[0]
                 location = get_geocode(address)
-                writer.writerow(location.values())
+                writer.writerow([address] + list(location.values()))
