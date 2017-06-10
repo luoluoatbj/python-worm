@@ -1,0 +1,30 @@
+# coding:utf-8
+import csv
+import json
+
+import requests
+
+
+def get_geocode(address_temp):
+    url = 'http://api.map.baidu.com/geocoder/v2/'
+    params = {
+        "address": address_temp,
+        "output": "json",
+        "ak": "TvZms2fFR9Z4rat2m2Ov49xd864MtQ4i",
+    }
+    res = requests.get(url, params=params).content
+    json_data = json.loads(res)
+    if json_data['status'] == 0:
+        return json_data['result']['location']
+
+
+if __name__ == '__main__':
+    all_data = []
+    with open('lagou.csv', 'r', encoding='utf-8') as lagou_file:
+        reader = csv.reader(lagou_file)
+        with open('address.csv', 'w+', encoding='utf-8') as address_file:
+            writer = csv.writer(address_file)
+            for line in reader:
+                address = line[0]
+                location = get_geocode(address)
+                writer.writerow(location.values())
