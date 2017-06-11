@@ -28,3 +28,5 @@ if __name__ == '__main__':
                 address = line[0]
                 location = get_geocode(address)
                 writer.writerow([address] + list(location.values()))
+lagou_file.close()
+address_file.close()
