@@ -38,7 +38,7 @@ def get_headers():
     return temp_headers
 
 def get_city_room_num(city_temp):
-    url = 'https://www.tujia.com/{city_temp}_gongyu/'.format(city_temp)
+    url = 'https://www.tujia.com/%s_gongyu/'%(city_temp)
     html = requests.get(url, headers=get_headers()).content
     soup=BeautifulSoup(html,'html.parser')
     number = soup.find('div',attrs={'class': 'total-house-amount'})
